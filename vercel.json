@@ -1,0 +1,8 @@
+{
+  "functions": {
+    "api/start.ts": {
+      "memory": 1024,
+      "maxDuration": 10
+    }
+  }
+}
