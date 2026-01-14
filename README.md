@@ -1,6 +1,6 @@
-# grammY-bot-template
+# tg-reminder-bot
 
-A boilerplate template that applies the GrammY framework to help you get started with the Telegram bot.
+A Telegram bot built with the GrammY framework.
 
 ## Features
 
