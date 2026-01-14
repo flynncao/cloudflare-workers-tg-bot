@@ -3,7 +3,7 @@ import { defineConfig } from 'tsup'
 export default defineConfig((options) => {
   return {
     entry: [
-      'api/start.ts',
+      'src/start.ts',
     ],
     splitting: true,
     sourcemap: true,

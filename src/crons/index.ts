@@ -5,7 +5,7 @@ import Logger from '#root/utils/logger.js'
 export function initCrons() {
   try {
     const botInstance = store.bot!
-    const userChatId = store.env!.user_chat_id!
+    const userChatId = store.env!.USER_CHAT_ID!
     const timeZone = 'Asia/Shanghai'
 
     const monringJob = new CronJob('0 0 8 * * *', () => {

@@ -10,23 +10,6 @@ async function greeting(conversation: MyConversation, ctx: MyContext) {
   await ctx.reply(`You said: ${titleCtx.update.message?.text}`)
 }
 
-async function editPostConversation(conversation: MyConversation, ctx: MyContext) {
-  const id = ctx.session.postID
-  if (!id) {
-    Logger.logError('editPostConversation: id is null')
-    return
-  }
-  await ctx.reply('Enter the new post content')
-  const contentCtx = await conversation.waitFor(':text')
-  if (contentCtx.msg.text) {
-    conversation.external(() => {
-      editPost(id, contentCtx.msg.text).then(() => {
-        ctx.reply('Post edited successfully')
-      })
-    })
-  }
-}
-
 async function createPostConversation(conversation: MyConversation, ctx: MyContext) {
   await ctx.reply('Enter the post id: ')
   const id = await conversation.form.number()
@@ -43,7 +26,7 @@ async function createPostConversation(conversation: MyConversation, ctx: MyConte
   }
 }
 
-const conversations = [greeting, editPostConversation, createPostConversation]
+const conversations = [greeting, createPostConversation]
 
 export default conversations
 

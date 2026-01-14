@@ -125,7 +125,6 @@ const menuList: AtomicMenu[] = [
           await ctx.reply('Notification')
         },
       },
-      { text: 'Edit', callback: async (ctx: MyContext) => await ctx.conversation.enter('editPostConversation') },
       { text: 'Create', callback: async (ctx: MyContext) => await ctx.conversation.enter('createPostConversation') },
     ],
   },

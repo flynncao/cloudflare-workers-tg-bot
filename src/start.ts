@@ -1,4 +1,4 @@
-import { Bot, GrammyError, HttpError } from 'grammy'
+import { Bot, GrammyError, HttpError, webhookCallback } from 'grammy'
 import { autoRetry } from '@grammyjs/auto-retry'
 import Logger from './utils/logger.js'
 import registerMessageHandler from './bot/message-handler.js'
@@ -8,9 +8,11 @@ import registerMiddlewares from './middlewares/index.js'
 import { createAllMenus } from './middlewares/menu.js'
 import { createAllConversations } from './middlewares/conversation.js'
 import { initCrons } from './crons/index.js'
-import { connectMongodb } from './utils/mongodb.js'
+import type { MyEnv } from './types/env.js'
 import type { MyContext } from '#root/types/bot.js'
 import store from '#root/databases/store.js'
+
+export { type MyEnv as Env }
 
 // ============ Error Handling ============
 
@@ -29,21 +31,11 @@ function setupErrorHandler(bot: Bot<MyContext>): void {
   })
 }
 
-// ============ Initialization Phases ============
+// ============ Initialization ============
 
-async function initEnvironment(): Promise<boolean> {
-  if (!initLocalEnv()) {
-    Logger.logError('Failed to load environment')
-    return false
-  }
-  Logger.logProgress('Local env loaded')
-  return true
-}
-
-async function initDatabase(): Promise<void> {
-  const { env } = store
-  if (env?.mongodb_connect_url)
-    await connectMongodb()
+function initEnvFromWorker(env: MyEnv): void {
+  store.env = env
+  Logger.logProgress('Worker env loaded')
 }
 
 function createBot(): Bot<MyContext> {
@@ -51,7 +43,7 @@ function createBot(): Bot<MyContext> {
   if (!env)
     throw new Error('Environment not initialized')
 
-  const bot = new Bot<MyContext>(env.bot_token)
+  const bot = new Bot<MyContext>(env.BOT_TOKEN)
   bot.api.config.use(autoRetry())
   store.bot = bot
 
@@ -68,33 +60,22 @@ async function setupBot(bot: Bot<MyContext>): Promise<void> {
   setupErrorHandler(bot)
 }
 
-function startServices(): void {
-  initCrons()
-}
+// ============ Local Dev Entry Point ============
 
-// ============ Main Entry Point ============
-
-async function bootstrap(): Promise<void> {
+async function bootstrapLocal(): Promise<void> {
   try {
-    // Phase 1: Environment
-    if (!await initEnvironment())
+    if (!initLocalEnv()) {
+      Logger.logError('Failed to load environment')
       return
+    }
+    Logger.logProgress('Local env loaded')
 
-    // Phase 2: Database
-    await initDatabase()
-
-    // Phase 3: Bot creation
     const bot = createBot()
-
-    // Phase 4: Bot setup (handlers, middlewares, menus)
     await setupBot(bot)
+    initCrons()
 
-    // Phase 5: Background services
-    startServices()
-
-    // Phase 6: Start bot
     bot.start()
-    Logger.logSuccess('Bot started')
+    Logger.logSuccess('Bot started (polling)')
   }
   catch (error) {
     Logger.logError(`Error while initializing bot: ${error}`)
@@ -102,4 +83,31 @@ async function bootstrap(): Promise<void> {
   }
 }
 
-bootstrap()
+// ============ Cloudflare Worker Entry Point ============
+
+let initialized = false
+
+async function ensureInitialized(env: MyEnv): Promise<Bot<MyContext>> {
+  if (!initialized) {
+    initEnvFromWorker(env)
+    const bot = createBot()
+    await setupBot(bot)
+    initialized = true
+  }
+  return store.bot!
+}
+
+export default {
+  async fetch(
+    request: Request,
+    env: MyEnv,
+    ctx: ExecutionContext,
+  ): Promise<Response> {
+    const bot = await ensureInitialized(env)
+    return webhookCallback(bot, 'cloudflare-mod')(request)
+  },
+}
+
+// Run locally if not in worker environment
+if (typeof process !== 'undefined' && process.env.NODE_ENV !== 'production')
+  bootstrapLocal()

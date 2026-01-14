@@ -8,9 +8,10 @@
     "moduleResolution": "NodeNext",
     "paths": {
       "#root/*": [
-        "./api/*"
+        "./src/*"
       ]
     },
+    "types": ["@cloudflare/vitest-pool-workers"],
     "strict": true,
     "noEmit": false,
     "outDir": "./build",
@@ -19,7 +20,5 @@
     "skipLibCheck": true,
     "preserveWatchOutput": true
   },
-  "include": [
-    "api/**/*"
-  ]
+  "include": ["./**/*.ts", "../worker-configuration.d.ts"]
 }

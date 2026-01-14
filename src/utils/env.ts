@@ -5,9 +5,9 @@ import 'dotenv/config'
 export default function initLocalEnv(): boolean {
   try {
     store.env = {
-      bot_token: process.env.BOT_TOKEN!,
-      user_chat_id: process.env.USER_CHAT_ID!,
-      unsplash_access_key: process.env.UNSPLASH_ACCESS_KEY!,
+      BOT_TOKEN: process.env.BOT_TOKEN!,
+      USER_CHAT_ID: process.env.USER_CHAT_ID!,
+      UNSPLASH_ACCESS_KEY: process.env.UNSPLASH_ACCESS_KEY!,
     }
     return true
   }
