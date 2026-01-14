@@ -1,6 +1,5 @@
-import { Bot, GrammyError, HttpError, session } from 'grammy'
+import { Bot, GrammyError, HttpError } from 'grammy'
 import { autoRetry } from '@grammyjs/auto-retry'
-import { commandList } from './constants/index.js'
 import Logger from './utils/logger.js'
 import registerMessageHandler from './bot/message-handler.js'
 import initLocalEnv from './utils/env.js'
@@ -11,53 +10,96 @@ import { createAllConversations } from './middlewares/conversation.js'
 import { initCrons } from './crons/index.js'
 import { connectMongodb } from './utils/mongodb.js'
 import type { MyContext } from '#root/types/bot.js'
-
 import store from '#root/databases/store.js'
 
-function setErrorHandler(bot: Bot<MyContext>) {
+// ============ Error Handling ============
+
+function setupErrorHandler(bot: Bot<MyContext>): void {
   bot.catch((err) => {
     const ctx = err.ctx
     Logger.logError(`Error while handling update ${ctx.update.update_id}:`)
+
     const e = err.error
     if (e instanceof GrammyError)
       Logger.logError('Error in request:', e.description)
-
     else if (e instanceof HttpError)
       Logger.logError('Could not contact Telegram:', e)
-
     else
       Logger.logError('Unknown error:', e)
   })
 }
 
-async function init() {
-  if (!initLocalEnv())
-    return
-  Logger.logProgress('Local env loaded, bot starting...')
+// ============ Initialization Phases ============
+
+async function initEnvironment(): Promise<boolean> {
+  if (!initLocalEnv()) {
+    Logger.logError('Failed to load environment')
+    return false
+  }
+  Logger.logProgress('Local env loaded')
+  return true
+}
+
+async function initDatabase(): Promise<void> {
+  const { env } = store
+  if (env?.mongodb_connect_url)
+    await connectMongodb()
+}
+
+function createBot(): Bot<MyContext> {
+  const { env } = store
+  if (!env)
+    throw new Error('Environment not initialized')
+
+  const bot = new Bot<MyContext>(env.bot_token)
+  bot.api.config.use(autoRetry())
+  store.bot = bot
+
+  return bot
+}
+
+async function setupBot(bot: Bot<MyContext>): Promise<void> {
+  // Order matters: middlewares → conversations → menus → commands → messages
+  registerMiddlewares()
+  createAllConversations()
+  await createAllMenus()
+  await registerCommandHandler()
+  registerMessageHandler()
+  setupErrorHandler(bot)
+}
+
+function startServices(): void {
+  initCrons()
+}
+
+// ============ Main Entry Point ============
+
+async function bootstrap(): Promise<void> {
   try {
-    const { env } = store
-    if (env === null)
+    // Phase 1: Environment
+    if (!await initEnvironment())
       return
-    if (!env.mongodb_connect_url)
-      await connectMongodb()
-    const bot = new Bot<MyContext>(env.bot_token)
-    store.bot = bot
-    store.bot.api.config.use(autoRetry())
-    // Register handlers and menus...
-    registerMiddlewares()
-    createAllConversations()
-    await createAllMenus()
-    await registerCommandHandler()
-    registerMessageHandler()
-    setErrorHandler(bot)
-    initCrons()
-    // Start bot
+
+    // Phase 2: Database
+    await initDatabase()
+
+    // Phase 3: Bot creation
+    const bot = createBot()
+
+    // Phase 4: Bot setup (handlers, middlewares, menus)
+    await setupBot(bot)
+
+    // Phase 5: Background services
+    startServices()
+
+    // Phase 6: Start bot
     bot.start()
     Logger.logSuccess('Bot started')
   }
   catch (error) {
-    Logger.logError(`Error while initializing bot', ${error}`)
+    Logger.logError(`Error while initializing bot: ${error}`)
+    process.exit(1)
   }
 }
 
-init()
+bootstrap()
