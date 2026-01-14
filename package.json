@@ -43,7 +43,7 @@
     "unsplash-js": "^7.0.20"
   },
   "devDependencies": {
-    "@antfu/eslint-config": "^1.2.1",
+    "@antfu/eslint-config": "^6.7.3",
     "@cloudflare/vitest-pool-workers": "^0.8.19",
     "@swc/core": "^1.15.8",
     "@types/node": "^20.19.29",
