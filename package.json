@@ -6,7 +6,7 @@
   "description": "GrammY bot starter template",
   "author": "Flynn Cao",
   "license": "MIT",
-  "main": "./dist/start.js",
+  "main": "./build/index.js",
   "imports": {
     "#root/*": "./build/src/*"
   },
@@ -15,8 +15,8 @@
     "npm": ">=8.0.0"
   },
   "scripts": {
-    "start:local": "node ./build/start.js",
-    "dev:local": "tsup --watch --onSuccess \"node ./build/start.js\"",
+    "start:local": "node ./build/index.js",
+    "dev:local": "tsup --watch --onSuccess \"node ./build/index.js\"",
     "build:local": "tsup",
     "deploy": "wrangler deploy",
     "dev": "wrangler dev",
