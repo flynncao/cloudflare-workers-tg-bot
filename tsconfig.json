@@ -8,18 +8,18 @@
     "moduleResolution": "NodeNext",
     "paths": {
       "#root/*": [
-        "./src/*"
+        "./api/*"
       ]
     },
     "strict": true,
     "noEmit": false,
-    "outDir": "build",
+    "outDir": "./build",
     "sourceMap": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
     "preserveWatchOutput": true
   },
   "include": [
-    "src/**/*"
+    "api/**/*"
   ]
 }
