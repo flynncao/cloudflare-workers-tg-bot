@@ -8,6 +8,7 @@ export default function initLocalEnv(): boolean {
       BOT_TOKEN: process.env.BOT_TOKEN!,
       USER_CHAT_ID: process.env.USER_CHAT_ID!,
       UNSPLASH_ACCESS_KEY: process.env.UNSPLASH_ACCESS_KEY!,
+      BOT_INFO: '',
     }
     return true
   }

@@ -43,7 +43,12 @@ function createBot(): Bot<MyContext> {
   if (!env)
     throw new Error('Environment not initialized')
 
-  const bot = new Bot<MyContext>(env.BOT_TOKEN)
+  let bot: Bot<MyContext> = null as any
+  if (!env.BOT_INFO)
+    bot = new Bot<MyContext>(env.BOT_TOKEN)
+  else
+    bot = new Bot<MyContext>(env.BOT_TOKEN, { botInfo: JSON.parse(env.BOT_INFO) })
+
   bot.api.config.use(autoRetry())
   store.bot = bot
 
