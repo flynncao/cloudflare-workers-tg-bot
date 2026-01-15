@@ -108,6 +108,10 @@ export default {
     env: MyEnv,
     ctx: ExecutionContext,
   ): Promise<Response> {
+    // Only handle POST requests from Telegram webhook
+    if (request.method !== "POST") {
+      return new Response("Bot is running!", { status: 200 });
+    }
     const bot = await ensureInitialized(env)
     return webhookCallback(bot, 'cloudflare-mod')(request)
   },

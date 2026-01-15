@@ -11,15 +11,6 @@
     "enabled": true
   },
   "vars": {
-    "id": 6798598559,
-    "is_bot": true,
-    "first_name": "BocchiChan",
-    "username": "majimay_versatile_maid_dev_bot",
-    "can_join_groups": true,
-    "can_read_all_group_messages": false,
-    "supports_inline_queries": false,
-    "can_connect_to_business": false,
-    "has_main_web_app": false,
-    "has_topics_enabled": false
+    "BOT_INFO": "{ \"id\": 6798598559, \"is_bot\": true, \"first_name\": \"BocchiChan\", \"username\": \"majimay_versatile_maid_dev_bot\", \"can_join_groups\": true, \"can_read_all_group_messages\": false, \"supports_inline_queries\": false, \"can_connect_to_business\": false, \"has_main_web_app\": false, \"has_topics_enabled\": false }"
   }
 }
