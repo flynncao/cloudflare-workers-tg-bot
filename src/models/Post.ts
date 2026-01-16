@@ -1,4 +1,5 @@
 import { getModelForClass, prop } from '@typegoose/typegoose'
+import type { ReturnModelType } from '@typegoose/typegoose'
 
 export interface IPost {
   id: number
@@ -10,26 +11,34 @@ export interface IPost {
 }
 
 export class Post {
-  @prop({ required: true, unique: true, index: true })
+  @prop({ required: true, unique: true, index: true, type: () => Number })
   public id!: number
 
-  @prop({ required: true })
+  @prop({ required: true, type: () => String })
   public title!: string
 
-  @prop({ required: false, default: '' })
+  @prop({ required: false, default: '', type: () => String })
   public content!: string
 
-  @prop({ required: false, default: '' })
+  @prop({ required: false, default: '', type: () => String })
   public author!: string
 
-  @prop({ required: false, default: () => new Date() })
+  @prop({ required: false, default: () => new Date(), type: () => Date })
   public created_at!: Date
 
-  @prop({ required: false, default: null })
+  @prop({ required: false, default: null, type: () => Date })
   public updated_at?: Date
 }
 
-const PostModel = getModelForClass(Post)
+// Lazy-load the model to avoid initialization issues in Workers
+let PostModel: ReturnModelType<typeof Post> | null = null
+
+function getPostModel() {
+  if (!PostModel)
+    PostModel = getModelForClass(Post)
+
+  return PostModel
+}
 
 // TODO: Use menu to operate database
 interface Brief {
@@ -40,7 +49,7 @@ interface Brief {
 export function createNewPost(id: number, title: string, content: string, author: string = 'Flynn Cao', created_at?: Date) {
   if (!created_at)
     created_at = new Date()
-  return PostModel.create({
+  return getPostModel().create({
     id,
     title,
     content,
@@ -50,10 +59,10 @@ export function createNewPost(id: number, title: string, content: string, author
 }
 
 export function getAllPosts() {
-  return PostModel.find({})
+  return getPostModel().find({})
 }
 export function findOrCreateUser(id: number, brief?: Brief) {
-  return PostModel.findOneAndUpdate(
+  return getPostModel().findOneAndUpdate(
     // filter
     { id },
     // update
@@ -71,7 +80,7 @@ export function findOrCreateUser(id: number, brief?: Brief) {
 export function editPost(id: number, content: string, updated_at?: Date) {
   if (!updated_at)
     updated_at = new Date()
-  return PostModel.findOneAndUpdate(
+  return getPostModel().findOneAndUpdate(
     { id },
     { content, updated_at },
     {
