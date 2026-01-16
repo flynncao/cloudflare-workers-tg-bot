@@ -5,7 +5,7 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "tg-reminder-bot",
-  "main": "src/index.ts",
+  "main": "build/index.js",
   "compatibility_date": "2025-09-27",
   "compatibility_flags": ["nodejs_compat"],
   "observability": {
