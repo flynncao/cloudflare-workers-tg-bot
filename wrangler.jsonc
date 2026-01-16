@@ -7,8 +7,16 @@
   "name": "tg-reminder-bot",
   "main": "src/index.ts",
   "compatibility_date": "2025-09-27",
+  "compatibility_flags": ["nodejs_compat"],
   "observability": {
     "enabled": true
+  },
+  "triggers": {
+    "crons": [
+      "0 8 * * *",
+      "0 12 * * *",
+      "0 23 * * *"
+    ]
   },
   "vars": {
     "BOT_INFO": "{ \"id\": 6798598559, \"is_bot\": true, \"first_name\": \"BocchiChan\", \"username\": \"majimay_versatile_maid_dev_bot\", \"can_join_groups\": true, \"can_read_all_group_messages\": false, \"supports_inline_queries\": false, \"can_connect_to_business\": false, \"has_main_web_app\": false, \"has_topics_enabled\": false }"
