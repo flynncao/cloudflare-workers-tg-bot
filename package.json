@@ -18,6 +18,7 @@
     "start:local": "node ./build/index.js",
     "dev:local": "tsup --watch --onSuccess \"node ./build/index.js\"",
     "build:local": "tsup",
+    "build": "tsup",
     "deploy": "wrangler deploy",
     "dev": "wrangler dev",
     "start": "wrangler dev",
