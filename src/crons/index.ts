@@ -1,33 +1,38 @@
-import { CronJob } from 'cron'
-import store from '#root/databases/store.js'
+import type { Bot } from 'grammy'
 import Logger from '#root/utils/logger.js'
+import type { MyContext } from '#root/types/bot.js'
 
-export function initCrons() {
+export async function handleScheduled(
+  controller: ScheduledController,
+  bot: Bot<MyContext>,
+  userChatId: string,
+): Promise<void> {
   try {
-    const botInstance = store.bot!
-    const userChatId = store.env!.USER_CHAT_ID!
-    const timeZone = 'Asia/Shanghai'
+    // Get the cron trigger that fired (e.g., "0 8 * * *")
+    const cron = controller.cron
 
-    const monringJob = new CronJob('0 0 8 * * *', () => {
-      console.log('running a task every 8:00')
-      botInstance.api.sendMessage(userChatId, '早上好')
-    }, null, false, timeZone)
+    Logger.logProgress(`Cron triggered: ${cron}`)
 
-    const noonJob = new CronJob('0 0 12 * * *', () => {
-      console.log('running a task every 12:00')
-      botInstance.api.sendMessage(userChatId, '中午好')
-    }, null, false, timeZone)
+    // Match cron patterns to messages
+    if (cron === '0 8 * * *')
+      await bot.api.sendMessage(userChatId, '早上好')
 
-    const nightJob = new CronJob('0 0 23 * * *', () => {
-      console.log('running a task every 21:00')
-      botInstance.api.sendMessage(userChatId, '晚上好')
-    }, null, false, timeZone)
+    else if (cron === '0 12 * * *')
+      await bot.api.sendMessage(userChatId, '中午好')
 
-    const jobs = [monringJob, noonJob, nightJob]
-    jobs.forEach(job => job.start())
-    Logger.logSuccess('Crons initialized')
+    else if (cron === '0 23 * * *')
+      await bot.api.sendMessage(userChatId, '晚上好')
+
+    Logger.logSuccess(`Cron job completed: ${cron}`)
   }
   catch (error) {
-    Logger.logError(`Error while initializing crons', ${error}`)
+    Logger.logError(`Error in scheduled handler: ${error}`)
   }
+}
+
+// Keep initCrons for local development only
+export function initCrons() {
+  // Only runs in local Node.js environment, not in Workers
+  if (typeof process !== 'undefined' && process.env.NODE_ENV !== 'production')
+    Logger.logProgress('Crons skipped in local dev (use wrangler for cron testing)')
 }
