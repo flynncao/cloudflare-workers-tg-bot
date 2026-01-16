@@ -7,7 +7,7 @@ import registerCommandHandler from './bot/command-handler.js'
 import registerMiddlewares from './middlewares/index.js'
 import { createAllMenus } from './middlewares/menu.js'
 import { createAllConversations } from './middlewares/conversation.js'
-import { initCrons } from './crons/index.js'
+import { handleScheduled, initCrons } from './crons/index.js'
 import type { MyEnv } from './types/env.js'
 import type { MyContext } from '#root/types/bot.js'
 import store from '#root/databases/store.js'
@@ -109,11 +109,27 @@ export default {
     ctx: ExecutionContext,
   ): Promise<Response> {
     // Only handle POST requests from Telegram webhook
-    if (request.method !== "POST") {
-      return new Response("Bot is running!", { status: 200 });
-    }
+    if (request.method !== 'POST')
+      return new Response('Bot is running!', { status: 200 })
+
     const bot = await ensureInitialized(env)
     return webhookCallback(bot, 'cloudflare-mod')(request)
+  },
+
+  async scheduled(
+    controller: ScheduledController,
+    env: MyEnv,
+    ctx: ExecutionContext,
+  ): Promise<void> {
+    const bot = await ensureInitialized(env)
+    const userChatId = env.USER_CHAT_ID
+
+    if (!userChatId) {
+      console.error('USER_CHAT_ID not configured')
+      return
+    }
+
+    ctx.waitUntil(handleScheduled(controller, bot, userChatId))
   },
 }
 
