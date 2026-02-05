@@ -1,6 +1,3 @@
-import axios from 'axios'
-import 'dotenv/config'
-
 const UNSPLASH_API_BASE = 'https://api.unsplash.com'
 const accessKey = process.env.UNSPLASH_ACCESS_KEY || ''
 
@@ -57,42 +54,71 @@ interface getRandomParams {
   count?: number
 }
 
-const unsplashApi = axios.create({
-  baseURL: UNSPLASH_API_BASE,
-  headers: {
-    'Authorization': `Client-ID ${accessKey}`,
-    'Accept-Version': 'v1',
-  },
-})
+async function fetchUnsplash<T>(endpoint: string, params?: Record<string, any>): Promise<{
+  data: T | null
+  errors?: string[]
+}> {
+  try {
+    const url = new URL(`${UNSPLASH_API_BASE}${endpoint}`)
+
+    if (params) {
+      Object.entries(params).forEach(([key, value]) => {
+        if (value !== undefined && value !== null)
+          url.searchParams.append(key, String(value))
+      })
+    }
+
+    const response = await fetch(url.toString(), {
+      headers: {
+        'Authorization': `Client-ID ${accessKey}`,
+        'Accept-Version': 'v1',
+      },
+    })
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({})) as { errors?: string[] }
+      return {
+        data: null,
+        errors: [errorData?.errors?.[0] || `HTTP ${response.status}: ${response.statusText}`],
+      }
+    }
+
+    const data = (await response.json()) as T
+    return { data }
+  }
+  catch (error: any) {
+    console.error('Unsplash API error:', error.message)
+    return {
+      data: null,
+      errors: [error.message || 'Unknown error'],
+    }
+  }
+}
 
 export const photos = {
   getRandom: async (params: getRandomParams = {}): Promise<{
     response: UnsplashPhoto | UnsplashPhoto[]
     errors?: string[]
   }> => {
-    try {
-      const response = await unsplashApi.get<UnsplashPhoto | UnsplashPhoto[]>('/photos/random', {
-        params: {
-          query: params.query || 'tokyo night',
-          orientation: params.orientation || 'landscape',
-          collections: params.collections,
-          topics: params.topics,
-          username: params.username,
-          content_filter: params.content_filter || 'low',
-          count: params.count,
-        },
-      })
+    const result = await fetchUnsplash<UnsplashPhoto | UnsplashPhoto[]>('/photos/random', {
+      query: params.query || 'tokyo night',
+      orientation: params.orientation || 'landscape',
+      collections: params.collections,
+      topics: params.topics,
+      username: params.username,
+      content_filter: params.content_filter || 'low',
+      count: params.count,
+    })
 
-      return {
-        response: response.data,
-      }
-    }
-    catch (error: any) {
-      console.error('Unsplash API error:', error.response?.data || error.message)
+    if (result.errors) {
       return {
         response: [] as UnsplashPhoto[],
-        errors: [error.response?.data?.errors?.[0] || error.message || 'Unknown error'],
+        errors: result.errors,
       }
+    }
+
+    return {
+      response: result.data as UnsplashPhoto | UnsplashPhoto[],
     }
   },
 }

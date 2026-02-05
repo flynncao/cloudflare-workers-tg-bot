@@ -48,7 +48,7 @@ importers:
         specifier: ^3.3.2
         version: 3.3.2
       socks-proxy-agent:
-        specifier: 8.0.5
+        specifier: ^8.0.5
         version: 8.0.5
       tsx:
         specifier: 3.14.0
