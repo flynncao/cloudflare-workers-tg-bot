@@ -7,8 +7,9 @@ export default function initLocalEnv(): boolean {
     store.env = {
       BOT_TOKEN: process.env.BOT_TOKEN!,
       USER_CHAT_ID: process.env.USER_CHAT_ID!,
-      UNSPLASH_ACCESS_KEY: process.env.UNSPLASH_ACCESS_KEY!,
+      UNSPLASH_ACCESS_KEY: process.env.UNSPLASH_ACCESS_KEY || undefined,
       BOT_INFO: '',
+      PROXY_ADDRESS: process.env.PROXY_ADDRESS || undefined,
     }
     return true
   }

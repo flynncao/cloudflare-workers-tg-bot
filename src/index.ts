@@ -1,5 +1,6 @@
 import { Bot, GrammyError, HttpError, webhookCallback } from 'grammy'
 import { autoRetry } from '@grammyjs/auto-retry'
+import { SocksProxyAgent } from 'socks-proxy-agent'
 import Logger from './utils/logger.js'
 import registerMessageHandler from './bot/message-handler.js'
 import initLocalEnv from './utils/env.js'
@@ -42,13 +43,24 @@ function createBot(): Bot<MyContext> {
   const { env } = store
   if (!env)
     throw new Error('Environment not initialized')
+  const socksAgent = env.PROXY_ADDRESS ? new SocksProxyAgent(env.PROXY_ADDRESS!) : false
+  console.log('socksAgent', socksAgent)
 
   let bot: Bot<MyContext> = null as any
-  if (!env.BOT_INFO)
-    bot = new Bot<MyContext>(env.BOT_TOKEN)
-  else
-    bot = new Bot<MyContext>(env.BOT_TOKEN, { botInfo: JSON.parse(env.BOT_INFO) })
 
+  if (!env.BOT_INFO) {
+    bot = new Bot<MyContext>(
+      env.BOT_TOKEN,
+      {
+        client: {
+          baseFetchConfig: {
+            agent: socksAgent,
+          },
+        },
+      },
+    )
+  }
+  else { bot = new Bot<MyContext>(env.BOT_TOKEN, { botInfo: JSON.parse(env.BOT_INFO) }) }
   bot.api.config.use(autoRetry())
   store.bot = bot
 
@@ -69,6 +81,7 @@ async function setupBot(bot: Bot<MyContext>): Promise<void> {
 
 async function bootstrapLocal(): Promise<void> {
   try {
+    console.log('Starting bot in local development mode...')
     if (!initLocalEnv()) {
       Logger.logError('Failed to load environment')
       return

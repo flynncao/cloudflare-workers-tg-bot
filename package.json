@@ -39,6 +39,7 @@
     "mongodb": "^6.21.0",
     "mongoose": "^8.21.0",
     "node-fetch": "^3.3.2",
+    "socks-proxy-agent": "^8.0.5",
     "tsx": "3.14.0"
   },
   "devDependencies": {
