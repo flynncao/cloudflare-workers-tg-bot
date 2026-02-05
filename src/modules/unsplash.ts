@@ -1,5 +1,9 @@
 const UNSPLASH_API_BASE = 'https://api.unsplash.com'
-const accessKey = process.env.UNSPLASH_ACCESS_KEY || ''
+let accessKey = ''
+
+export function initUnsplash(key: string): void {
+  accessKey = key
+}
 
 interface UnsplashPhoto {
   id: string

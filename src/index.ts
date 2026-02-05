@@ -90,6 +90,14 @@ async function bootstrapLocal(): Promise<void> {
 
     const bot = createBot()
     await setupBot(bot)
+
+    // Initialize unsplash for local dev
+    const { env } = store
+    if (env?.UNSPLASH_ACCESS_KEY) {
+      const { initUnsplash } = await import('./modules/unsplash.js')
+      initUnsplash(env.UNSPLASH_ACCESS_KEY)
+    }
+
     initCrons()
 
     bot.start()
@@ -108,6 +116,13 @@ let initialized = false
 async function ensureInitialized(env: MyEnv): Promise<Bot<MyContext>> {
   if (!initialized) {
     initEnvFromWorker(env)
+
+    // Initialize unsplash with the access key from worker env
+    if (env.UNSPLASH_ACCESS_KEY) {
+      const { initUnsplash } = await import('./modules/unsplash.js')
+      initUnsplash(env.UNSPLASH_ACCESS_KEY)
+    }
+
     const bot = createBot()
     await setupBot(bot)
     initialized = true
