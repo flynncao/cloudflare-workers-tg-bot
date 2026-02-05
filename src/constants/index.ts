@@ -41,16 +41,16 @@ export const commandList: Command[] = [
     ctx.reply(`<b>Hi!</b> <i>Welcome</i> to <a href="https://t.me/${me.username}">${me.first_name}</a><span class="tg-spoiler"> id:${me.id}</span>`, { parse_mode: 'HTML' })
   } },
   { command: 'wallpaper', description: 'Show random wallpaper', async  handler(ctx: MyContext) {
-    await unsplash.photos.getRandom({ query: 'tokyo,night', orientation: 'landscape' }).then((result: any) => {
-      if (result.errors) {
-        ctx.reply(`error occurred: ${result.errors[0]}`)
-      }
-      else {
-        console.log('result :>> ', result.response)
-        ctx.replyWithPhoto(result.response.urls.regular)
-        // https://unsplash.com/documentation#get-a-random-photo
-      }
-    })
+    const result = await unsplash.photos.getRandom({ query: 'tokyo night', orientation: 'landscape' })
+    if (result.errors) {
+      ctx.reply(`error occurred: ${result.errors[0]}`)
+    }
+    else {
+      const photo = Array.isArray(result.response) ? result.response[0] : result.response
+      console.log('result :>> ', photo)
+      ctx.replyWithPhoto(photo.urls.regular)
+      // https://unsplash.com/documentation#get-a-random-photo
+    }
   } },
   {
     command: 'newpost',
