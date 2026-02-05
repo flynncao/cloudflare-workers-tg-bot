@@ -12,9 +12,33 @@ export const commandList: Command[] = [
       await ctx.reply('Welcome, up and running')
     },
   },
-  { command: 'help', description: 'Show help text', handler: async (ctx: MyContext) => {
-    await ctx.reply('Help text')
-  } },
+  {
+    command: 'help',
+    description: 'Show help text',
+    handler: async (ctx: MyContext) => {
+      const helpText = `<b>Available Commands:</b>
+
+/wallpaper - Get a random wallpaper
+  Usage: /wallpaper [keyword] [--orientation] [--quality]
+  Examples:
+    /wallpaper
+    /wallpaper mountain
+    /wallpaper "cyberpunk city" --portrait
+    /wallpaper anime --landscape--full
+    /wallpaper --portrait--raw
+
+  Orientations: landscape, portrait, squarish
+  Qualities: raw, full, regular, small, thumb
+
+/wiki - Search Wikipedia
+  Usage: /wiki <search term>
+
+/start - Start the bot
+/about - Bot information`
+
+      await ctx.reply(helpText, { parse_mode: 'HTML' })
+    },
+  },
   {
     command: 'hello',
     description: 'Greet the bot',
@@ -40,88 +64,152 @@ export const commandList: Command[] = [
     const me = ctx.me
     ctx.reply(`<b>Hi!</b> <i>Welcome</i> to <a href="https://t.me/${me.username}">${me.first_name}</a><span class="tg-spoiler"> id:${me.id}</span>`, { parse_mode: 'HTML' })
   } },
-  { command: 'wallpaper', description: 'Show random wallpaper', async handler(ctx: MyContext) {
-    console.log('[DEBUG /wallpaper] Command triggered')
-
-    // Check if unsplash access key is set
-    const { env } = store
-    console.log('[DEBUG /wallpaper] Store env exists:', !!env)
-    console.log('[DEBUG /wallpaper] UNSPLASH_ACCESS_KEY in env:', !!env?.UNSPLASH_ACCESS_KEY)
-    console.log('[DEBUG /wallpaper] UNSPLASH_ACCESS_KEY value:', env?.UNSPLASH_ACCESS_KEY ? `${env.UNSPLASH_ACCESS_KEY.substring(0, 10)}...` : 'not set')
-
-    try {
-      console.log('[DEBUG /wallpaper] Calling unsplash.photos.getRandom...')
-      const startTime = Date.now()
-
-      const result = await unsplash.photos.getRandom({ query: 'tokyo night', orientation: 'landscape' })
-
-      const endTime = Date.now()
-      console.log('[DEBUG /wallpaper] Unsplash API call took:', endTime - startTime, 'ms')
-
-      console.log('[DEBUG /wallpaper] Result has errors:', !!result.errors)
-      if (result.errors) {
-        console.log('[DEBUG /wallpaper] Errors:', result.errors)
-        await ctx.reply(`error occurred: ${result.errors[0]}`)
-        return
-      }
-
-      console.log('[DEBUG /wallpaper] Result has response:', !!result.response)
-      const photo = Array.isArray(result.response) ? result.response[0] : result.response
-      console.log('[DEBUG /wallpaper] Photo object:', JSON.stringify(photo, null, 2))
-      console.log('[DEBUG /wallpaper] Photo URL:', photo?.urls?.regular)
-
-      if (!photo?.urls?.regular) {
-        console.log('[DEBUG /wallpaper] ERROR: No photo URL found')
-        await ctx.reply('Error: No photo URL returned from Unsplash')
-        return
-      }
-
-      console.log('[DEBUG /wallpaper] Sending photo to user...')
-      await ctx.replyWithPhoto(photo.urls.regular)
-      console.log('[DEBUG /wallpaper] Photo sent successfully')
-    }
-    catch (error) {
-      console.log('[DEBUG /wallpaper] Exception caught:', error)
-      await ctx.reply(`Exception: ${error}`)
-    }
-  } },
   {
-    command: 'google',
-    description: 'Search Wikipedia (debug command)',
+    command: 'wallpaper',
+    description: 'Show random wallpaper',
     async handler(ctx: MyContext) {
-      console.log('[DEBUG /google] Command triggered')
+      console.log('[DEBUG /wallpaper] Command triggered')
+
+      // Check if unsplash access key is set
+      const { env } = store
+      console.log('[DEBUG /wallpaper] Store env exists:', !!env)
+      console.log('[DEBUG /wallpaper] UNSPLASH_ACCESS_KEY in env:', !!env?.UNSPLASH_ACCESS_KEY)
+      console.log('[DEBUG /wallpaper] UNSPLASH_ACCESS_KEY value:', env?.UNSPLASH_ACCESS_KEY ? `${env.UNSPLASH_ACCESS_KEY.substring(0, 10)}...` : 'not set')
+
+      // Parse command arguments
+      const input = ctx.match?.toString().trim()
+      console.log('[DEBUG /wallpaper] Raw input:', input)
+
+      // Default values
+      let query = 'tokyo night'
+      let orientation: 'landscape' | 'portrait' | 'squarish' = 'landscape'
+      let quality: 'raw' | 'full' | 'regular' | 'small' | 'thumb' = 'regular'
+
+      // Parse input: format can be:
+      // /wallpaper
+      // /wallpaper keyword
+      // /wallpaper keyword --landscape
+      // /wallpaper keyword --landscape--full
+      // /wallpaper --portrait--raw (uses default query)
+      if (input) {
+        // Extract flags (start with --)
+        const flagsMatch = input.match(/--([\w-]+)/)
+        if (flagsMatch) {
+          const flags = flagsMatch[1].split('--')
+          console.log('[DEBUG /wallpaper] Flags found:', flags)
+
+          // Parse orientation
+          if (flags.includes('landscape') || flags.includes('l'))
+            orientation = 'landscape'
+          else if (flags.includes('portrait') || flags.includes('p'))
+            orientation = 'portrait'
+          else if (flags.includes('squarish') || flags.includes('s'))
+            orientation = 'squarish'
+
+          // Parse quality
+          if (flags.includes('raw'))
+            quality = 'raw'
+          else if (flags.includes('full'))
+            quality = 'full'
+          else if (flags.includes('regular') || flags.includes('reg'))
+            quality = 'regular'
+          else if (flags.includes('small'))
+            quality = 'small'
+          else if (flags.includes('thumb'))
+            quality = 'thumb'
+
+          console.log('[DEBUG /wallpaper] Parsed orientation:', orientation)
+          console.log('[DEBUG /wallpaper] Parsed quality:', quality)
+        }
+
+        // Extract query (everything before -- or entire string if no flags)
+        const queryMatch = input.split('--')[0].trim()
+        if (queryMatch) {
+          query = queryMatch
+          console.log('[DEBUG /wallpaper] Parsed query:', query)
+        }
+      }
+
+      console.log('[DEBUG /wallpaper] Final params - query:', query, 'orientation:', orientation, 'quality:', quality)
+
+      try {
+        console.log('[DEBUG /wallpaper] Calling unsplash.photos.getRandom...')
+        const startTime = Date.now()
+
+        const result = await unsplash.photos.getRandom({ query, orientation, quality })
+
+        const endTime = Date.now()
+        console.log('[DEBUG /wallpaper] Unsplash API call took:', endTime - startTime, 'ms')
+
+        console.log('[DEBUG /wallpaper] Result has errors:', !!result.errors)
+        if (result.errors) {
+          console.log('[DEBUG /wallpaper] Errors:', result.errors)
+          await ctx.reply(`error occurred: ${result.errors[0]}`)
+          return
+        }
+
+        console.log('[DEBUG /wallpaper] Result has response:', !!result.response)
+        const photo = Array.isArray(result.response) ? result.response[0] : result.response
+        console.log('[DEBUG /wallpaper] Photo object:', JSON.stringify(photo, null, 2))
+
+        // Get the URL based on quality
+        const photoUrl = photo?.urls?.[quality]
+        console.log('[DEBUG /wallpaper] Photo URL:', photoUrl)
+
+        if (!photoUrl) {
+          console.log('[DEBUG /wallpaper] ERROR: No photo URL found')
+          await ctx.reply('Error: No photo URL returned from Unsplash')
+          return
+        }
+
+        console.log('[DEBUG /wallpaper] Sending photo to user...')
+        await ctx.replyWithPhoto(photoUrl)
+        console.log('[DEBUG /wallpaper] Photo sent successfully')
+      }
+      catch (error) {
+        console.log('[DEBUG /wallpaper] Exception caught:', error)
+        await ctx.reply(`Exception: ${error}`)
+      }
+    },
+  },
+  {
+    command: 'wiki',
+    aliases: ['wikipedia'],
+    description: 'Search Wikipedia',
+    async handler(ctx: MyContext) {
+      console.log('[DEBUG /wiki] Command triggered')
 
       // Get search query from command arguments
       const query = ctx.match?.toString().trim()
-      console.log('[DEBUG /google] Query:', query)
+      console.log('[DEBUG /wiki] Query:', query)
 
       if (!query) {
-        await ctx.reply('Usage: /google <search term>\nExample: /google Tokyo')
+        await ctx.reply('Usage: /wiki <search term>\nExample: /wiki Tokyo')
         return
       }
 
       try {
-        console.log('[DEBUG /google] Fetching from Wikipedia...')
+        console.log('[DEBUG /wiki] Fetching from Wikipedia...')
         const startTime = Date.now()
 
         // Search Wikipedia API
         const searchUrl = `https://en.wikipedia.org/w/api.php?action=query&format=json&origin=*&list=search&srsearch=${encodeURIComponent(query)}&limit=1`
-        console.log('[DEBUG /google] URL:', searchUrl)
+        console.log('[DEBUG /wiki] URL:', searchUrl)
 
         const response = await fetch(searchUrl)
-        console.log('[DEBUG /google] Response status:', response.status, response.statusText)
+        console.log('[DEBUG /wiki] Response status:', response.status, response.statusText)
 
         if (!response.ok) {
-          console.log('[DEBUG /google] ERROR: Response not ok')
+          console.log('[DEBUG /wiki] ERROR: Response not ok')
           await ctx.reply(`Error: Wikipedia API returned ${response.status}`)
           return
         }
 
-        const data = await response.json() as { query?: { search?: Array<{ title: string; snippet: string }> } }
-        console.log('[DEBUG /google] Response data:', JSON.stringify(data, null, 2))
+        const data = await response.json() as { query?: { search?: Array<{ title: string, snippet: string }> } }
+        console.log('[DEBUG /wiki] Response data:', JSON.stringify(data, null, 2))
 
         const searchResults = data.query?.search
-        console.log('[DEBUG /google] Search results:', searchResults)
+        console.log('[DEBUG /wiki] Search results:', searchResults)
 
         if (!searchResults || searchResults.length === 0) {
           await ctx.reply(`No results found for "${query}"`)
@@ -136,13 +224,13 @@ export const commandList: Command[] = [
         const message = `<b>${title}</b>\n\n${snippet}\n\n<a href="${pageUrl}">Read more on Wikipedia</a>`
 
         const endTime = Date.now()
-        console.log('[DEBUG /google] Request took:', endTime - startTime, 'ms')
+        console.log('[DEBUG /wiki] Request took:', endTime - startTime, 'ms')
 
         await ctx.reply(message, { parse_mode: 'HTML' })
-        console.log('[DEBUG /google] Reply sent successfully')
+        console.log('[DEBUG /wiki] Reply sent successfully')
       }
       catch (error) {
-        console.log('[DEBUG /google] Exception caught:', error)
+        console.log('[DEBUG /wiki] Exception caught:', error)
         await ctx.reply(`Exception: ${error}`)
       }
     },

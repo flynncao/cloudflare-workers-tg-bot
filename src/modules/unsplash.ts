@@ -56,6 +56,7 @@ interface getRandomParams {
   username?: string
   content_filter?: 'low' | 'high'
   count?: number
+  quality?: 'raw' | 'full' | 'regular' | 'small' | 'thumb'
 }
 
 async function fetchUnsplash<T>(endpoint: string, params?: Record<string, any>): Promise<{

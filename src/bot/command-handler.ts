@@ -12,7 +12,15 @@ export default async function registerCommandHandler() {
   }
 
   commandList.forEach(async (element: Command) => {
+    // Register main command
     bot.command(element.command, element.handler)
+
+    // Register aliases if they exist
+    if (element.aliases) {
+      element.aliases.forEach((alias) => {
+        bot.command(alias, element.handler)
+      })
+    }
   })
 
   const commands = commandList.map((Item) => {
