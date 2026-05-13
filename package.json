@@ -47,7 +47,7 @@
     "@cloudflare/vitest-pool-workers": "^0.8.19",
     "@swc/core": "^1.15.8",
     "@types/node": "^20.19.29",
-    "concurrently": "^8.2.2",
+    "concurrently": "^9.2.1",
     "eslint": "^8.57.1",
     "husky": "8.0.3",
     "lint-staged": "14.0.1",
