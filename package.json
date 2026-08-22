@@ -44,7 +44,7 @@
   },
   "devDependencies": {
     "@antfu/eslint-config": "^1.2.1",
-    "@cloudflare/vitest-pool-workers": "^0.8.19",
+    "@cloudflare/vitest-pool-workers": "^0.22.0",
     "@swc/core": "^1.15.8",
     "@types/node": "^20.19.29",
     "concurrently": "^8.2.2",
