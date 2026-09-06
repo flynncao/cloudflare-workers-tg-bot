@@ -52,7 +52,7 @@
     "husky": "8.0.3",
     "lint-staged": "14.0.1",
     "nodemon": "^3.1.11",
-    "tsc-watch": "^6.3.1",
+    "tsc-watch": "^7.2.1",
     "tsup": "^8.5.1",
     "typescript": "^5.9.3",
     "vitest": "~3.2.0",
