@@ -58,7 +58,7 @@ importers:
         specifier: ^1.2.1
         version: 1.2.1(eslint@8.57.1)(typescript@5.9.3)(vitest@3.2.4(@types/node@20.19.31)(tsx@3.14.0)(yaml@2.8.2))
       '@cloudflare/vitest-pool-workers':
-        specifier: ^0.8.19
+        specifier: ^0.8.71
         version: 0.8.71(@vitest/runner@3.2.4)(@vitest/snapshot@3.2.4)(vitest@3.2.4(@types/node@20.19.31)(tsx@3.14.0)(yaml@2.8.2))
       '@swc/core':
         specifier: ^1.15.8
