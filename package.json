@@ -46,7 +46,7 @@
     "@antfu/eslint-config": "^1.2.1",
     "@cloudflare/vitest-pool-workers": "^0.8.19",
     "@swc/core": "^1.15.8",
-    "@types/node": "^20.19.29",
+    "@types/node": "^20.19.43",
     "concurrently": "^8.2.2",
     "eslint": "^8.57.1",
     "husky": "8.0.3",
